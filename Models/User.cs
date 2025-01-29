@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Library.Models;
 
@@ -16,7 +17,7 @@ public partial class User
     public string Password { get; set; } = null!;
 
     public int AddressId { get; set; }
-
+    [Column("Created_at")]
     public DateOnly CreatedAt { get; set; }
 
     public virtual Address Address { get; set; } = null!;
