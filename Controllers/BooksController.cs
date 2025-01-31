@@ -1,6 +1,7 @@
 ﻿using Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Library.Models.DTO;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -73,18 +74,37 @@ namespace Library.Controllers
         }
 
         // Azione per recuperare il libro in base al titolo
-        [HttpGet("GetByTitle")]
-        public async Task<ActionResult<Book>> GetBookByTitle(string title)
+        [HttpGet("GetByTitleAndNationality")]
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByTitleAndNationality(string? title,string? nationality)
         {
-            var book = await _context.Books
-                .FirstOrDefaultAsync(b => b.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+            var query = _context.Books
+           .Include(b => b.Author) 
+           //trasformo dinamicamente la query
+           .AsQueryable();
 
-            if (book == null)
+            //Controllo se il titolo è inserito
+            if (!string.IsNullOrEmpty(title))
             {
-                return NotFound("Libro non trovato");
+                query = query.Where(b => b.Title.Contains(title));
+            }
+            //Controllo se la nazionalità è inserita
+            if (!string.IsNullOrEmpty(nationality))
+            {
+                query = query.Where(b => b.Author != null && b.Author.Nationality == nationality);
             }
 
-            return Ok(book);
+            //Creo l'oggetto BookDto
+            var books = await query.Select(b => new BookDto
+            {
+                Title = b.Title,
+                AuthorId = b.AuthorId,
+                Price = b.Price,
+                PublishedDate = b.PublishedDate,
+                Stock = b.Stock,
+                AuthorNationality = b.Author != null ? b.Author.Nationality : null 
+            }).ToListAsync();
+
+            return Ok(books);
         }
     }
 }
