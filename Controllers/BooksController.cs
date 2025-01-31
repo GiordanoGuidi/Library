@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Library.Models.DTO;
+using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -102,6 +103,52 @@ namespace Library.Controllers
                 PublishedDate = b.PublishedDate,
                 Stock = b.Stock,
                 AuthorNationality = b.Author != null ? b.Author.Nationality : null 
+            }).ToListAsync();
+
+            return Ok(books);
+        }
+
+        //Azione per recuperare il libro in base al prezzo e allo stock
+        [HttpGet("GetByPriceAndStock")]
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByPriceAndStock(decimal? price,int? stock)
+        {
+            var query = _context.Books.AsQueryable();
+
+            //Controllo se il prezzo è inserito
+            if(price != null)
+            {
+                query = query.Where(b => b.Price >=  price);
+            }
+            //Controllo se lo stock è inserito
+            if(stock != null)
+            {
+                query = query.Where(b => b.Stock >= stock);
+            }
+            //Se entrambi presenti ordino per prezzo e poi per stock crescente
+            if (price != null && stock != null)
+            {
+                query = query.OrderBy(b => b.Price).ThenBy(b => b.Stock);
+            }
+            // Se solo il prezzo è presente, ordino solo per prezzo crescente
+            else if (price != null)
+            {
+                query = query.OrderBy(b => b.Price);
+            }
+            // Se solo lo stock è presente, ordino solo per stock crescente
+            else if (stock != null)
+            {
+                query = query.OrderBy(b => b.Stock);
+            }
+
+
+            //Creo l'oggetto BookDto
+            var books = await query.Select(b => new BookDto
+            {
+                Title = b.Title,
+                AuthorId = b.AuthorId,
+                Price = b.Price,
+                PublishedDate = b.PublishedDate,
+                Stock = b.Stock,
             }).ToListAsync();
 
             return Ok(books);
