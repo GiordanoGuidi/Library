@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Library.Models.DTO;
 using System.Linq;
+using Library.PaginationUtils;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -76,42 +77,62 @@ namespace Library.Controllers
 
         // Azione per recuperare il libro in base al titolo
         [HttpGet("GetByTitleAndNationality")]
-        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByTitleAndNationality(string? title,string? nationality)
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByTitleAndNationality(string? title,string? nationality,int page=1,int pageSize=10)
         {
-            var query = _context.Books
-           .Include(b => b.Author) 
-           //trasformo dinamicamente la query
-           .AsQueryable();
 
-            //Controllo se il titolo è inserito
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 10; // Evito richieste troppo grandi
+
+            var query = _context.Books
+                .Include(b => b.Author)
+                .AsQueryable();
+
+            // Filtri dinamici
             if (!string.IsNullOrEmpty(title))
             {
                 query = query.Where(b => b.Title.Contains(title));
             }
-            //Controllo se la nazionalità è inserita
+
             if (!string.IsNullOrEmpty(nationality))
             {
                 query = query.Where(b => b.Author != null && b.Author.Nationality == nationality);
             }
 
-            //Creo l'oggetto BookDto
-            var books = await query.Select(b => new BookDto
-            {
-                Title = b.Title,
-                AuthorId = b.AuthorId,
-                Price = b.Price,
-                PublishedDate = b.PublishedDate,
-                Stock = b.Stock,
-                AuthorNationality = b.Author != null ? b.Author.Nationality : null 
-            }).ToListAsync();
+            // Conta il numero totale di record prima dell'impaginazione
+            var totalRecords = await query.CountAsync();
 
-            return Ok(books);
+            // Applica paginazione con Skip e Take
+            var books = await query
+                .OrderBy(b=> b.Id)
+                //Indico gli elementi da saltare
+                .Skip((page - 1) * pageSize)
+                //Prendo i successivi 10
+                .Take(pageSize)
+                .Select(b => new BookDto
+                {
+                    Id= b.Id,
+                    Title = b.Title,
+                    AuthorId = b.AuthorId,
+                    Price = b.Price,
+                    PublishedDate = b.PublishedDate,
+                    Stock = b.Stock,
+                    AuthorNationality = b.Author != null ? b.Author.Nationality : null
+                })
+                .ToListAsync();
+
+            //Creo l'oggetto paginationInfo
+            var paginationInfo = new PaginationInfo(page, pageSize, totalRecords);
+            //Restituisco i libri e le info sulla paginazione
+            return Ok(new PagedResult<BookDto>(books, paginationInfo));
         }
 
         //Azione per recuperare il libro in base al prezzo e allo stock
         [HttpGet("GetByPriceAndStock")]
-        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByPriceAndStock(decimal? price,int? stock)
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByPriceAndStock(decimal? price,int? stock,int page=1,int pageSize=10)
         {
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 10; // Evito richieste troppo grandi
+
             var query = _context.Books.AsQueryable();
 
             //Controllo se il prezzo è inserito
@@ -140,10 +161,20 @@ namespace Library.Controllers
                 query = query.OrderBy(b => b.Stock);
             }
 
+            // Calcolo il numero totale di record per determinare il numero totale di pagine
+            var totalRecords = await query.CountAsync();
+
+            // Calcolo il numero totale di pagine
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
 
             //Creo l'oggetto BookDto
-            var books = await query.Select(b => new BookDto
+            var books = await query
+                .Skip((page -1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new BookDto
             {
+                Id= b.Id,
                 Title = b.Title,
                 AuthorId = b.AuthorId,
                 Price = b.Price,
@@ -151,7 +182,10 @@ namespace Library.Controllers
                 Stock = b.Stock,
             }).ToListAsync();
 
-            return Ok(books);
+            //Creo l'oggetto paginationInfo
+            var paginationInfo = new PaginationInfo(page, pageSize,totalRecords);
+            //Restituisco i libri e le info sulla paginazione
+            return Ok(new PagedResult<BookDto>(books, paginationInfo));
         }
     }
 }
