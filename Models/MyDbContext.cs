@@ -32,7 +32,7 @@ public partial class MyDbContext : DbContext
         {
             entity.ToTable("Address");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.City).HasMaxLength(100);
             entity.Property(e => e.Street).HasMaxLength(100);
             entity.Property(e => e.ZipCode)
@@ -42,7 +42,7 @@ public partial class MyDbContext : DbContext
 
         modelBuilder.Entity<Author>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Firstname).HasMaxLength(100);
             entity.Property(e => e.Lastname).HasMaxLength(100);
             entity.Property(e => e.Nationality).HasMaxLength(100);
@@ -50,7 +50,7 @@ public partial class MyDbContext : DbContext
 
         modelBuilder.Entity<Book>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.AuthorId).HasColumnName("Author_id");
             entity.Property(e => e.Price).HasColumnType("money");
             entity.Property(e => e.PublishedDate).HasColumnName("Published_date");
@@ -64,7 +64,7 @@ public partial class MyDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.AddressId).HasColumnName("Address_id");
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at");
             entity.Property(e => e.Email).HasMaxLength(100);

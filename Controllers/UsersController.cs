@@ -1,8 +1,8 @@
 ﻿using Library.Models;
+using Library.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Library.Controllers
 {
@@ -37,14 +37,6 @@ namespace Library.Controllers
             return user;
         }
 
-        // POST api/<UsersController>
-        [HttpPost]
-        public async Task<ActionResult<User>> Post(User user)
-        {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
-        }
 
         // PUT api/<UsersController>/5
         [HttpPut("{id}")]
