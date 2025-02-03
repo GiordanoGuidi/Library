@@ -16,9 +16,6 @@ namespace Library
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-           
-
-
             // Configuro i servizi qui (add db context e altre dipendenze)
             builder.Services.AddDbContext<MyDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MainSqlConnection")));
@@ -39,13 +36,6 @@ namespace Library
 
             app.UseCors("CorsPolicy");
 
-
-            //// Eseguo il seeding all'avvio
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-            //    seeder.Seed(); // Chiamata al metodo di seeding per popolare il database
-            //}
 
             // Configura il middleware della pipeline per la richiesta HTTP
             if (app.Environment.IsDevelopment())
