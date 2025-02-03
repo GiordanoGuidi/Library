@@ -1,7 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
 using Library.Models;
-using Library.Models.Seed;
 
 namespace Library
 {
@@ -19,7 +18,6 @@ namespace Library
             // Configuro i servizi qui (add db context e altre dipendenze)
             builder.Services.AddDbContext<MyDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MainSqlConnection")));
-            builder.Services.AddTransient<DataSeeder>(); // Aggiungo il DataSeeder ai servizi
 
 
             //Cors Policy

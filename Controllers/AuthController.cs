@@ -1,9 +1,9 @@
 ﻿using Library.Models;
 using Library.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
-using BCrypt.Net;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
 
 namespace Library.Controllers
 {
@@ -51,6 +51,19 @@ namespace Library.Controllers
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
             return Ok("Registrazione completata con successo.");
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginUserDto loginUserDto)
+        {
+            //Recupero l'utente
+            var user = await _context.Users.FirstOrDefaultAsync( c => c.Email == loginUserDto.Email);
+            if (user == null) return BadRequest("Email o password errati");
+            //Utilizzo la verifica di BCrypt per controllare la validità della password
+            bool isValid = BCrypt.Net.BCrypt.Verify(loginUserDto.Password, user.Password);
+            if (!isValid) return BadRequest("Password errata");
+            else return Ok("Accesso effettuato");
+
         }
 
         
