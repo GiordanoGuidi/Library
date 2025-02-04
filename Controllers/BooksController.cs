@@ -25,8 +25,10 @@ namespace Library.Controllers
 
         // GET: api/<BooksControllerr>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Book>>> GetUsers(int page = 1, int pageSize = 10)
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooks([FromQuery] int page,[FromQuery] int pageSize)
         {
+            Console.WriteLine(page);
+            Console.WriteLine(pageSize);
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 10; // Evito richieste troppo grandi
 
@@ -108,7 +110,7 @@ namespace Library.Controllers
 
         // Azione per recuperare il libro in base al titolo
         [HttpGet("GetByTitleAndNationality")]
-        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByTitleAndNationality(string? title,string? nationality,int page=1,int pageSize=10)
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByTitleAndNationality(string? title,string? nationality,int page,int pageSize)
         {
 
             if (page < 1) page = 1;
@@ -159,7 +161,7 @@ namespace Library.Controllers
 
         //Azione per recuperare il libro in base al prezzo e allo stock
         [HttpGet("GetByPriceAndStock")]
-        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByPriceAndStock(decimal? price,int? stock,int page=1,int pageSize=10)
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBookByPriceAndStock(decimal? price,int? stock,int page,int pageSize)
         {
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 10; // Evito richieste troppo grandi
