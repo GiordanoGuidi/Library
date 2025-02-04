@@ -4,8 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Library.Models.DTO;
 using System.Linq;
 using Library.PaginationUtils;
+using Azure;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using static System.Reflection.Metadata.BlobBuilder;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Library.Controllers
 {
@@ -22,9 +25,37 @@ namespace Library.Controllers
 
         // GET: api/<BooksControllerr>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Book>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<Book>>> GetUsers(int page = 1, int pageSize = 10)
         {
-            return await _context.Books.ToListAsync();
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 10; // Evito richieste troppo grandi
+
+            var query = _context.Books.AsQueryable();
+            var books = await query
+                .OrderBy(b => b.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b=> new Book
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    AuthorId = b.AuthorId,
+                    Price = b.Price,
+                    PublishedDate = b.PublishedDate,
+                    Stock = b.Stock,
+                })
+                .ToListAsync();
+
+            // Calcolo il numero totale di record per determinare il numero totale di pagine
+            var totalRecords = await query.CountAsync();
+
+            // Calcolo il numero totale di pagine
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            //Creo l'oggetto paginationInfo
+            var paginationInfo = new PaginationInfo(page, pageSize, totalRecords);
+            //Restituisco i libri e le info sulla paginazione
+            return Ok(new PagedResult<Book>(books, paginationInfo));
         }
 
         // GET api/<BooksControllerr>/5
